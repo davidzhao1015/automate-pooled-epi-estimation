@@ -10,8 +10,6 @@ import scipy
 from scipy import stats
 import math
 
-
-
 #--------------------------------------------------------------
 # Simulate input data
 #--------------------------------------------------------------
@@ -28,18 +26,44 @@ input_df.head()
 #--------------------------------------------------------------
 # Calculate point birth prevalence
 #--------------------------------------------------------------
-def cal_birth_prevalence(df):
-    df['birth_prevalence'] = df['case'] / df['population']
-    df['birth_prevalence_100k'] = df['birth_prevalence'] * 100000
-    return df
+# def cal_birth_prevalence(df):
+#     df['birth_prevalence'] = df['case'] / df['population']
+#     df['birth_prevalence_100k'] = df['birth_prevalence'] * 100000
+#     return df
 
 #--------------------------------------------------------------
 # Calculate margin of error of birth prevalence 
 #--------------------------------------------------------------
-def cal_margin_of_error(df):
+# def cal_margin_of_error(df):
+#     df['margin_of_error'] = 1.96 * np.sqrt(df['birth_prevalence'] * (1 - df['birth_prevalence']) / df['population'])
+#     df['margin_of_error_100k'] = df['margin_of_error'] * 100000
+#     return df
+
+def estimate_ci(df, dist_type=None):
+    # Calculate birth prevalence
+    df['birth_prevalence'] = df['case'] / df['population']
+    df['birth_prevalence_100k'] = df['birth_prevalence'] * 100000
+
+    # Calculate margin of error
     df['margin_of_error'] = 1.96 * np.sqrt(df['birth_prevalence'] * (1 - df['birth_prevalence']) / df['population'])
     df['margin_of_error_100k'] = df['margin_of_error'] * 100000
-    return df
 
-# cal_birth_prevalence(input_df)
-# cal_margin_of_error(input_df)
+    if dist_type == 'normal':
+        # Follow normal distribution 
+        for i in range(len(df)):
+            df.loc[i, '95 CI, lower_bound (normal dist)'] = df.loc[i, 'birth_prevalence_100k'] - df.loc[i, 'margin_of_error_100k'] if (df.loc[i, 'birth_prevalence_100k'] - df.loc[i, 'margin_of_error_100k']) > 0 else 0
+            df.loc[i, '95 CI, upper_bound (normal dist)'] = df.loc[i, 'birth_prevalence_100k'] + df.loc[i, 'margin_of_error_100k']
+    elif dist_type == 'poisson' or dist_type == None:
+        # Follow Poisson distribution
+        df['95 CI, lower_bound (poisson dist)'] = scipy.stats.poisson.ppf(0.975, df['case']) / df['population'] * 100000
+        df['95 CI, upper_bound (poisson dist)'] = scipy.stats.poisson.ppf(0.975, df['case']) / df['population'] * 100000
+
+    return df    
+
+# estimate_ci(input_df, dist_type='normal')
+
+
+
+#--------------------------------------------------------------
+# Calculate average birth prevalence and 95% CI 
+#--------------------------------------------------------------

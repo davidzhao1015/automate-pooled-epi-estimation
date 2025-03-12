@@ -22,6 +22,8 @@ input_df = pd.DataFrame({
 
 input_df.head()
 
+input_df.to_csv('input.csv', index=False)
+
 #--------------------------------------------------------------
 # Estimate birth prevalence and 95% CI per study
 #--------------------------------------------------------------

@@ -114,9 +114,9 @@ def estimate_pooled_birth_prev_inverse(df):
 
     return df
 
-inverse_df = estimate_pooled_birth_prev_inverse(input_df)
+# inverse_df = estimate_pooled_birth_prev_inverse(input_df)
 
-inverse_df.to_csv('output.csv', index=False)
+# inverse_df.to_csv('output.csv', index=False)
 
 #--------------------------------------------------------------
 # Calculate Q and I^2 statistics

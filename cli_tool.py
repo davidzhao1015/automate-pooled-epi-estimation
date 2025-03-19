@@ -32,8 +32,7 @@ def main():
                 print(f'The input file path you enter: {args.input_file}')
             else:
                 print("Exiting the program")
-                break
-
+                return
 
     # Prompt for output file if not provided
     if not args.output_file:
@@ -54,7 +53,7 @@ def main():
 
     # Todo: Present a summary of the input data
     print("Summary of the input data")
-    print(input_df.info())    
+    print(f'The input data contains {input_df['author and year'].nunique()} unique studies')
 
     # Estimate 95% CI
     df_estimate_ci = estimate_ci(input_df)

@@ -15,11 +15,13 @@ def main():
 
     # Prompt for input file if not provided
     if not args.input_file:
-        args.input_file = input("Please enter the input file path: ")
+        args.input_file = input("Please enter the absolute path for the input file: ")
+        print(f'The input file path you enter: {args.input_file}')
 
     # Prompt for output file if not provided
     if not args.output_file:
-        args.output_file = input("Please enter the output file path: ")
+        args.output_file = input("Please enter the output file name (without file extension): ")
+        print(f'The output file name you enter: {args.output_file}')
 
     # Read input file
     input_df = pd.read_csv(args.input_file)

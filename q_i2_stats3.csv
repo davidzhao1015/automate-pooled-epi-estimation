@@ -1,0 +1,10 @@
+Statistic,Value
+average birth prevalence_100k,0.2507255128445716
+95CI lower bound average,0.1407920187511825
+95CI upper bound average,0.03760882692668574
+pooled birth prevalence (inverse) per 100K,0.18938431844705148
+"95 CI, lower_bound (inverse)",0.1519254095935615
+"95 CI, upper_bound (inverse)",0.22684322730054146
+Q_statistic,31.805267905131302
+freedom_degree,7
+I2_statistic,0.7799106732608073

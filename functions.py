@@ -14,13 +14,13 @@ import math
 # Simulate input data
 #--------------------------------------------------------------
 
-# input_df = pd.DataFrame({
-#     'author and year': ['Poupetova, 2010', 'Dionisi-Vici, 2002', 'Poorthuis, 1999', 'Hult, 2014', 'Czatoryska, 1993', 'Smith, 2011', 'Applegarth, 1999', 'Chin, 2022'],
-#     'case': [8, 22, 30, 10, 11, 33, 3, 13],
-#     'population': [3362889, 7173959, 7358444, 2080791, 11951872, 15192000, 1035816, 3693759],
-# })
+input_df = pd.DataFrame({
+    'author and year': ['Poupetova, 2010', 'Dionisi-Vici, 2002', 'Poorthuis, 1999', 'Hult, 2014', 'Czatoryska, 1993', 'Smith, 2011', 'Applegarth, 1999', 'Chin, 2022'],
+    'case': [8, 22, 30, 10, 11, 33, 3, 13],
+    'population': [3362889, 7173959, 7358444, 2080791, 11951872, 15192000, 1035816, 3693759],
+})
 
-# input_df.head()
+input_df.head()
 
 # input_df.to_csv('input.csv', index=False)
 
@@ -28,7 +28,8 @@ import math
 # Estimate birth prevalence and 95% CI per study
 #--------------------------------------------------------------
 
-def estimate_ci(df, dist_type=None):
+def estimate_ci(df1, dist_type=None):
+    df = df1.copy()
     # Calculate birth prevalence
     df['birth_prevalence'] = df['case'] / df['population']
     df['birth_prevalence_100k'] = df['birth_prevalence'] * 100000
@@ -45,11 +46,11 @@ def estimate_ci(df, dist_type=None):
     elif dist_type == 'poisson' or dist_type == None:
         # Follow Poisson distribution
         df['95 CI, lower_bound (poisson dist)'] = scipy.stats.poisson.ppf(0.025, df['case']) / df['population'] * 100000
-        df['95 CI, upper_bound (poisson dist)'] = scipy.stats.poisson.ppf(0.975, df['case']) / df['population'] * 100000
-
+        df['95 CI, upper_bound (poisson dist)'] = scipy.stats.poisson.ppf(0.975, df['case']) / df['population'] * 10000
+  
     return df    
 
-# estimate_ci(input_df, dist_type='normal')
+estimate_ci(input_df, dist_type='normal')
 
 
 
@@ -80,7 +81,8 @@ def cal_average_birth_prev(df):
 
     return df_estimate_ci
 
-# avg_birth_prev_df = cal_average_birth_prev(input_df)
+avg_birth_prev_df = cal_average_birth_prev(input_df)
+avg_birth_prev_df.head()
 
 # avg_birth_prev_df.to_csv('output.csv', index=False)
 
@@ -90,7 +92,11 @@ def cal_average_birth_prev(df):
 # Estimate pooled birth prevalence using inverse variance method
 #------------------------------------------------------------------
 
-def estimate_pooled_birth_prev_inverse(df):
+def estimate_pooled_birth_prev_inverse(df1):
+    df2 = df1.copy()
+
+    df = cal_average_birth_prev(df2)
+    
     # Calculate std error per study
     df['std error per 100K'] = np.sqrt(df['birth_prevalence'] * (1 - df['birth_prevalence']) / df['population']) * 100000
 
@@ -116,7 +122,7 @@ def estimate_pooled_birth_prev_inverse(df):
 
     return df
 
-# inverse_df = estimate_pooled_birth_prev_inverse(input_df)
+inverse_df = estimate_pooled_birth_prev_inverse(input_df)
 
 # inverse_df.to_csv('output.csv', index=False)
 
@@ -124,13 +130,15 @@ def estimate_pooled_birth_prev_inverse(df):
 # Calculate Q and I^2 statistics
 #--------------------------------------------------------------
 
-def cal_Q_I2(df):
-    df2 = cal_average_birth_prev(df)
+def cal_Q_I2(df1):
+    df2 = cal_average_birth_prev(df1)
     df_inverse = estimate_pooled_birth_prev_inverse(df2)
 
     # Calculate Q statistic
     df_inverse['weight_prev_square'] = df_inverse['cofficient per study'] * (df_inverse['birth_prevalence_100k'] ** 2)
     df_inverse['weight_prev'] = df_inverse['cofficient per study'] * df_inverse['birth_prevalence_100k']
+
+    df = df_inverse.copy()
 
     df['Q_statistic'] = df_inverse['weight_prev_square'].sum() - (df_inverse['weight_prev'].sum() ** 2/df_inverse['cofficient per study'].sum())
 
@@ -144,6 +152,25 @@ def cal_Q_I2(df):
 
     return df
 
-# q_df = cal_Q_I2(input_df)
+q_df = cal_Q_I2(input_df)
+q_df.head()
+
+q_df.columns
 
 # q_df.to_csv('output_q.csv', index=False)
+
+
+selected_cols = ['average birth prevalence_100k', '95CI lower bound average', '95CI upper bound average',
+                         'pooled birth prevalence (inverse) per 100K', '95 CI, lower_bound (inverse)', '95 CI, upper_bound (inverse)',
+                         'Q_statistic', 'freedom_degree', 'I2_statistic']
+
+q_df2 = q_df.loc[0, selected_cols] 
+print(q_df2)
+
+# Convert q_df2 to dataframe and use index as first column
+q_df2 = q_df2.reset_index()
+q_df2.rename(columns={'index': 'Statistic'}, inplace=True)
+q_df3 = pd.DataFrame(q_df2)
+q_df3.rename(columns={0: 'Value'}, inplace=True)
+q_df3
+
